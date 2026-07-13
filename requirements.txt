@@ -1,0 +1,4 @@
+pygame=2.0.0
+pytorch=2.13.0
+matplotlib
+ipython
