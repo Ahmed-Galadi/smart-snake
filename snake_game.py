@@ -63,7 +63,7 @@ class Snake:
     def move_right(self):
         if self.direction != 'left':
             self.direction = 'right'
-    
+
     def step(self):
         for i in range(self.s_length - 1, 0, -1):
             self.x[i] = self.x[i - 1]
