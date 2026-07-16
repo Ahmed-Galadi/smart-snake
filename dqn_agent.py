@@ -86,6 +86,12 @@ class DQNAgent(nn.Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+    
+    def save(self, path):
+        torch.save(self.net.state_dict(), path)
+
+    def load(self, path):
+        self.net.load_state_dict(torch.load(path))
 
     def __len__(self):
         return len(self.xp)
