@@ -1,4 +1,2 @@
-pygame=2.0.0
-pytorch=2.13.0
-matplotlib
-ipython
+pygame==2.6.1
+torch==1.13.1
