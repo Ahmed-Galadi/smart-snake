@@ -4,7 +4,7 @@ import time
 
 env = SnakeEnv()
 agent = DQNAgent()
-agent.load("training_test.pth")
+agent.load("training_2.pth")
 round = 0
 best_score = 0
 for episode in range(20):

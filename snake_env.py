@@ -7,7 +7,7 @@ class SnakeEnv:
         self.score = 0
         self.over = False
         self.reward = 0
-        self.state = [0] * 11
+        self.state = [0] * 14
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.screen.fill(GREEN)
         self.snake = Snake(self.screen, 3)
@@ -28,6 +28,7 @@ class SnakeEnv:
         return False
     
     def game_core(self):
+        self.reward -= 1
         self.snake.step()
         self.apple.draw()
         self.display_score()
@@ -38,15 +39,15 @@ class SnakeEnv:
             self.apple.move()
             self.score += 1
             self.snake.incSnakeLen()
-            self.reward += 10
+            self.reward += 20
 
         #collision with self
         if self.is_self(self.snake.x[0], self.snake.y[0]):
-            self.reward -= 10
+            self.reward -= 20
             raise Exception("Game Over!")
         # collision with wall
         if self.is_wall():
-            self.reward -= 10
+            self.reward -= 20
             raise Exception("Game Over!")
 
     def display_score(self):
@@ -77,54 +78,123 @@ class SnakeEnv:
         straight = 0
         right = 1
         left = 2
+        snkHeadX = self.snake.x[0]
+        snkHeadY = self.snake.y[0]
+        dir = self.snake.direction
         # danger ahead
-        if (self.snake.x[0] - SIZE < 0 and self.snake.direction == 'left') or (self.snake.x[0] + SIZE >= WIDTH and self.snake.direction == 'right'):
+        if (snkHeadX - SIZE < 0 and dir == 'left') or (snkHeadX + SIZE >= WIDTH and dir == 'right'):
             danger[straight] = 1;
-        elif (self.snake.y[0] - SIZE < 0 and self.snake.direction == 'up') or (self.snake.y[0] + SIZE >= HEIGHT and self.snake.direction == 'down'):
+        elif (snkHeadY - SIZE < 0 and dir == 'up') or (snkHeadY + SIZE >= HEIGHT and dir == 'down'):
             danger[straight] = 1
-        elif (self.is_self(self.snake.x[0] - SIZE, self.snake.y[0]) and self.snake.direction == 'left') or (self.is_self(self.snake.x[0] + SIZE, self.snake.y[0]) and self.snake.direction == 'right'):
+        elif (self.is_self(snkHeadX - SIZE, snkHeadY) and dir == 'left') or (self.is_self(snkHeadX + SIZE, snkHeadY) and dir == 'right'):
             danger[straight] = 1
-        elif (self.is_self(self.snake.x[0], self.snake.y[0] - SIZE) and self.snake.direction == 'up') or (self.is_self(self.snake.x[0], self.snake.y[0] + SIZE) and self.snake.direction == 'down'):
+        elif (self.is_self(snkHeadX, snkHeadY - SIZE) and dir == 'up') or (self.is_self(snkHeadX, snkHeadY + SIZE) and dir == 'down'):
             danger[straight] = 1
         else:
             danger[straight] = 0
         # danger sides
-        if self.snake.direction == 'up':
-            if self.snake.x[0] - SIZE < 0 or self.is_self(self.snake.x[0] - SIZE, self.snake.y[0]):
-                danger[left] = 1
-            elif self.snake.x[0] + SIZE >= WIDTH or self.is_self(self.snake.x[0] + SIZE, self.snake.y[0]):
-                danger[right] = 1
-            else:
-                danger[left] = 0
-                danger[right] = 0
-        elif self.snake.direction == 'down':
-            if self.snake.x[0] - SIZE < 0 or self.is_self(self.snake.x[0] - SIZE, self.snake.y[0]):
-                danger[right] = 1
-            elif self.snake.x[0] + SIZE >= WIDTH or self.is_self(self.snake.x[0] + SIZE, self.snake.y[0]):
+        if dir == 'up':
+            if snkHeadX - SIZE < 0 or self.is_self(snkHeadX - SIZE, snkHeadY):
                 danger[left] = 1
             else:
-                danger[right] = 0
                 danger[left] = 0
 
-        elif self.snake.direction == 'left':
-            if self.snake.y[0] - SIZE < 0 or self.is_self(self.snake.x[0], self.snake.y[0] - SIZE):
+            if snkHeadX + SIZE >= WIDTH or self.is_self(snkHeadX + SIZE, snkHeadY):
                 danger[right] = 1
-            elif self.snake.y[0] + SIZE >= HEIGHT or self.is_self(self.snake.x[0], self.snake.y[0] + SIZE):
-                danger[left] = 1
             else:
-                danger[left] = 0
                 danger[right] = 0
 
-        elif self.snake.direction == 'right':
-            if self.snake.y[0] - SIZE < 0 or self.is_self(self.snake.x[0], self.snake.y[0] - SIZE):
-                danger[left] = 1
-            elif self.snake.y[0] + SIZE >= HEIGHT or self.is_self(self.snake.x[0], self.snake.y[0] + SIZE):
+        elif dir == 'down':
+            if snkHeadX - SIZE < 0 or self.is_self(snkHeadX - SIZE, snkHeadY):
                 danger[right] = 1
             else:
                 danger[right] = 0
+
+            if snkHeadX + SIZE >= WIDTH or self.is_self(snkHeadX + SIZE, snkHeadY):
+                danger[left] = 1
+            else:
                 danger[left] = 0
+
+        elif dir == 'left':
+            if snkHeadY - SIZE < 0 or self.is_self(snkHeadX, snkHeadY - SIZE):
+                danger[right] = 1
+            else:
+                danger[right] = 0
+            if snkHeadY + SIZE >= HEIGHT or self.is_self(snkHeadX, snkHeadY + SIZE):
+                danger[left] = 1
+            else:
+                danger[left] = 0
+
+        elif dir == 'right':
+            if snkHeadY - SIZE < 0 or self.is_self(snkHeadX, snkHeadY - SIZE):
+                danger[left] = 1
+            else:
+                danger[left] = 0
+            if snkHeadY + SIZE >= HEIGHT or self.is_self(snkHeadX, snkHeadY + SIZE):
+                danger[right] = 1
+            else:
+                danger[right] = 0
+
         return danger
-    
+
+    def get_free_space(self):
+        head_x = self.snake.x[0]
+        head_y = self.snake.y[0]
+        dir = self.snake.direction
+        max_cells = (WIDTH // SIZE) * (HEIGHT // SIZE)
+        result = []
+        r_cells = [] # [(x, y), (x, y), (x, y)] => [straigh, left, right]
+        if dir == "up":
+            r_cells.append((head_x, head_y - SIZE))
+            r_cells.append((head_x + SIZE, head_y))
+            r_cells.append((head_x - SIZE, head_y))
+        if dir == "down":
+            r_cells.append((head_x, head_y + SIZE))
+            r_cells.append((head_x - SIZE, head_y))
+            r_cells.append((head_x + SIZE, head_y))
+        if dir == "left":
+            r_cells.append((head_x - SIZE, head_y))
+            r_cells.append((head_x, head_y - SIZE))
+            r_cells.append((head_x, head_y + SIZE))
+        if dir == "right":
+            r_cells.append((head_x + SIZE, head_y))
+            r_cells.append((head_x, head_y + SIZE))
+            r_cells.append((head_x, head_y - SIZE))
+        for cell in r_cells:
+            if not self.is_self(cell[0], cell[1]) and not (cell[0] < 0 or cell[0] >= WIDTH or cell[1] < 0 or cell[1] >= HEIGHT):
+                result.append(self.count_reachable(cell[0], cell[1]) / max_cells)
+            else:
+                result.append(0)
+        return result
+            
+                
+
+    def count_reachable(self, startX, startY):
+        startGridX = startX // SIZE
+        startGridY = startY // SIZE
+        visited = set()
+        queue = [(startGridX, startGridY)]
+        count = 0
+        while queue:
+            (x, y) = queue.pop(0)
+            # skip if visited
+            if (x, y) in visited:
+                continue
+
+            # skip if out of bound (out of walls) 
+            if x < 0 or x >= WIDTH//SIZE or y < 0 or y >= HEIGHT//SIZE:
+                continue
+            # skip if snake body
+            if self.is_self(x * SIZE, y * SIZE):
+                continue
+            visited.add((x, y))
+            count += 1
+            queue.append((x+1, y))
+            queue.append((x-1, y))
+            queue.append((x, y+1))
+            queue.append((x, y-1))
+        return count
+
     def get_apple(self):
         # (up, down, left, right)
         output = [0] * 4
@@ -140,10 +210,11 @@ class SnakeEnv:
 
     def get_state(self):
         danger = self.get_danger()
+        free_space = self.get_free_space()
         direction = self.snake.get_direction()
         apple = self.get_apple()
 
-        return danger + direction + apple
+        return danger + free_space + direction + apple
 
     def is_over(self):
         return self.over

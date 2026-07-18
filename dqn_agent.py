@@ -7,12 +7,21 @@ class DQNAgent(nn.Module):
     def __init__(self, max_size = 10000):
         super().__init__()
         self.net = nn.Sequential(
-                    nn.Linear(11, 256),
+                    nn.Linear(14, 256),
                     nn.ReLU(),
                     nn.Linear(256, 256),
                     nn.ReLU(),
                     nn.Linear(256, 4)
                 )
+        self.target_net = nn.Sequential(
+                    nn.Linear(14, 256),
+                    nn.ReLU(),
+                    nn.Linear(256, 256),
+                    nn.ReLU(),
+                    nn.Linear(256, 4)
+                )
+        # identicat teacher net
+        self.target_net.load_state_dict(self.net.state_dict())
         self.xp = deque(maxlen=max_size)
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.001)
         self.loss_fn = nn.MSELoss()
@@ -51,6 +60,9 @@ class DQNAgent(nn.Module):
 
         return (statesTensor, actionsTensor, rewardsTensor, nextStatesTensor, oversTensor)
     
+    def sync_target(self):
+        self.target_net.load_state_dict(self.net.state_dict())
+
     def choose_action(self, state, epsilon):
         randf = random.random()
         if randf < epsilon:
@@ -62,7 +74,7 @@ class DQNAgent(nn.Module):
                 action = torch.argmax(q_values).item()
                 return action
     
-    def train(self, batch_size = 64, gamma = 0.9):
+    def train(self, batch_size = 64, gamma = 0.95):
         if len(self.xp) < batch_size:
             return
         
@@ -77,14 +89,15 @@ class DQNAgent(nn.Module):
         
         # compute target with the next state
         with torch.no_grad():
-            nextQ = self.net(nextStates)
-            maxNextQ = nextQ.max(1, keepdim=True)[0]
-            target = rewards + gamma * maxNextQ * (1 - overs)
+            nextAction = self.net(nextStates).argmax(1, keepdim=True)
+            tNet = self.target_net(nextStates).gather(1, nextAction)
+            target = rewards + gamma * tNet * (1 - overs)
 
         # calculate loss and update network
         loss = self.loss_fn(predicted, target)
         self.optimizer.zero_grad()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1.0)
         self.optimizer.step()
     
     def save(self, path):

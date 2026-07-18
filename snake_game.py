@@ -20,8 +20,8 @@ class Apple:
         self.snake = snake
         self.image = pygame.image.load("apple.png").convert()
         self.screen = screen
-        self.x = SIZE * 3 
-        self.y = SIZE * 3
+        self.x = (WIDTH//SIZE - 1) * SIZE //2
+        self.y = (HEIGHT//SIZE - 1) * SIZE //2
 
     def draw(self):
         self.screen.blit(self.image, (self.x, self.y))
@@ -36,12 +36,11 @@ class Apple:
         return False
 
     def move(self):
-        self.x = random.randint(0, 20) * SIZE
-        self.y = random.randint(0, 15) * SIZE
+        self.x = random.randint(0, WIDTH//SIZE-1) * SIZE
+        self.y = random.randint(0, HEIGHT//SIZE-1) * SIZE
         while self.is_snake_pos():
-            self.x = random.randint(0, 20) * SIZE
-            self.y = random.randint(0, 15) * SIZE
-
+            self.x = random.randint(0, WIDTH//SIZE-1) * SIZE
+            self.y = random.randint(0, HEIGHT//SIZE-1) * SIZE
 
 class Snake:
     def __init__(self, screen, s_length):
